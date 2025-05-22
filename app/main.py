@@ -48,3 +48,36 @@ async def create_note(req: Request):
 
     # 5. Devolvemos el ID del documento recién creado
     return {"id": ref.id}
+
+
+@app.put("/notes/{id}")
+async def create_note(req: Request, id: str):
+    data = await req.json()
+    if not data.get("title") or not data.get("content"):
+        raise HTTPException(status_code=400, detail="Faltan 'title' o 'content'")
+
+    doc_ref = db.collection("notes").document(id)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    doc_ref.update({
+        "title": data["title"],
+        "content": data["content"]
+    })
+
+    return {"message": "Nota actualizada correctamente", "id": id}
+
+@app.delete("/notes/{id}")
+async def delete_note(id: str):
+    
+    doc_ref = db.collection("notes").document(id)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    doc_ref.delete()
+
+    return {"message": "Nota eliminada correctamente", "id": id}
